@@ -468,6 +468,32 @@ describe('sse-channel', function() {
         req.end();
     });
 
+    it('does not send initial :ok comment', function(done) {
+        var interval = 25;
+        initServer({ pingInterval: interval, sendInitComment: false });
+
+        var opts = url.parse(host + path);
+        opts.headers = { Accept: 'text/event-stream' };
+
+        var req = http.request(opts, function(res) {
+            var buf = '';
+            res.on('data', function(chunk) {
+                buf += chunk.toString();
+            });
+
+            setTimeout(function() {
+                req.abort();
+                assert.equal(
+                    buf, ':\n:\n'
+                );
+                done();
+            }, interval);
+        });
+
+        req.setNoDelay(true);
+        req.end();
+    });
+
     it('sends "preamble" if client requests it', function(done) {
         initServer();
 
